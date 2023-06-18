@@ -9,7 +9,7 @@ from django.http import HttpResponse
 client = MongoClient('mongodb+srv://test:test@mubadarahcluster.fphpucp.mongodb.net/')
 db = client.mubadarah_database
 video = db.demovideos
-
+user = db.user
 
 
 
@@ -75,3 +75,28 @@ def approve(request, video_id, comment_id):
 def delete(request, video_id, comment_id):
     video.update_one({"_id": video_id}, {"$pull": {"comments": {"comment_id": comment_id}}})
     return redirect('dashboard')  # Redirect to the 'dashboard' view
+
+@api_view(['GET'])
+def user_dashboard(request):
+    number_of_users = user.count_documents({})
+    number_of_verified_emails = user.count_documents({"email_verified": True})
+    number_of_UNverified_emails = user.count_documents({"email_verified": {"$exists": False}})
+    number_of_female = user.count_documents({"data.gender": True})
+    number_of_male = user.count_documents({"data.gender": False})
+
+
+    counties_groupby = list(user.aggregate([{'$group': {'_id': '$data.country','count': {'$sum': 1}}}]))
+    counties_labels = [entry['_id'] for entry in counties_groupby]
+    counties_counts = [entry['count'] for entry in counties_groupby]
+
+    nationality_groupby = list(user.aggregate([{'$group': {'_id': '$data.nationality','count': {'$sum': 1}}}]))
+    nationality_labels = [entry['_id'] for entry in nationality_groupby]
+    nationality_counts = [entry['count'] for entry in nationality_groupby]
+
+
+    context = {"number_of_users":number_of_users, "number_of_verified_emails":number_of_verified_emails,
+               "number_of_UNverified_emails":number_of_UNverified_emails, "number_of_female":number_of_female, 
+               "number_of_male":number_of_male, "counties_labels":counties_labels, "counties_counts":counties_counts, 
+               "nationality_labels":nationality_labels, "nationality_counts":nationality_counts}
+    
+    return render(request, 'Userindex.html',context)
