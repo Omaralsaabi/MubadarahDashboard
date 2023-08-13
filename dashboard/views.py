@@ -6,7 +6,7 @@ from django.http import HttpResponse
 
 # Create your views here.
 
-client = MongoClient('mongodb+srv://test:test@mubadarahcluster.fphpucp.mongodb.net/')
+client = MongoClient('')
 db = client.mubadarah_database
 video = db.demovideos
 user = db.user
